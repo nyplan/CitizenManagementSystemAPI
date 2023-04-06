@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "/0OPpAKJ+IHoOLkpPBOqFo2eECmwEMM1IPvME9ciMbE=",
+  "Source": "CitizenManagementSystemAPI",
+  "BasePath": "_content/CitizenManagementSystemAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
