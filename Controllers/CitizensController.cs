@@ -2,10 +2,9 @@
 using CitizenManagementSystemAPI.DAL;
 using CitizenManagementSystemAPI.DTOs.CitizenDTOs;
 using CitizenManagementSystemAPI.Entities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CitizenManagementSystemAPI.Controllers
 {
@@ -14,16 +13,26 @@ namespace CitizenManagementSystemAPI.Controllers
     public class CitizensController : ControllerBase
     {
         private readonly ApiContext _context;
+        private readonly IMemoryCache _memoryCache;
         private readonly IMapper _mapper;
-        public CitizensController(ApiContext context, IMapper mapper)
+        public CitizensController(ApiContext context, IMapper mapper, IMemoryCache cache)
         {
             _context = context;
             _mapper = mapper;
+            _memoryCache = cache;
         }
         [HttpGet]
         public IActionResult GetCitizens()
         {
-            IQueryable<Citizen> entities = _context.Citizens
+            const string cacheKey = "CitizensList";
+
+            if (_memoryCache.TryGetValue(cacheKey, out IEnumerable<CitizensToListDto> dtos))
+            {
+                return Ok(dtos);
+            }
+            else
+            {
+                IQueryable<Citizen> entities = _context.Citizens
                                                 .Include(c => c.Gender)
                                                 .Include(c => c.BirthPlace)
                                                 .Include(c => c.CurrentPlace.Region)
@@ -31,8 +40,13 @@ namespace CitizenManagementSystemAPI.Controllers
                                                 .Include(c => c.CurrentPlace.Entrance)
                                                 .Include(c => c.Father)
                                                 .Include(c => c.Mother);
-            IEnumerable<CitizensToListDto> dtos = _mapper.Map<List<CitizensToListDto>>(entities);
-            return Ok(dtos);
+                dtos = _mapper.Map<List<CitizensToListDto>>(entities);
+
+                var cacheOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+                _memoryCache.Set(cacheKey, dtos, cacheOptions);
+                return Ok(dtos);
+            }
+            
         }
         [HttpGet("{pin}")]
         public IActionResult GetParent(string pin)
@@ -44,7 +58,7 @@ namespace CitizenManagementSystemAPI.Controllers
                                                .Include(c => c.CurrentPlace.Street)
                                                .Include(c => c.CurrentPlace.Entrance)
                                                .Include(c => c.Father)
-                                               .Include(c => c.Mother).First();
+                                                .Include(c => c.Mother).First();
             CitizenByPinDto dto = _mapper.Map<CitizenByPinDto>(entity);
             return Ok(dto);
         }

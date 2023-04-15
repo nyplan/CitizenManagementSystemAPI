@@ -16,6 +16,8 @@ builder.Services.AddDbContext<ApiContext>(options =>
 });
 builder.Services.AddAutoMapper(typeof(MapperProfiles));
 
+builder.Services.AddMemoryCache();
+
 
 
 var app = builder.Build();
