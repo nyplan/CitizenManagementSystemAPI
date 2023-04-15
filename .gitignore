@@ -1,1 +1,8 @@
-CitizenManagementSystemAPI/appsettings.json
+*.json
+*.sln
+*.user
+*.csproj
+/obj
+/bin
+/Properties
+/.vs
